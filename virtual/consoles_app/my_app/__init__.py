@@ -11,6 +11,8 @@ from my_app.console.views import console
 app.register_blueprint(console)
 from my_app.serie.views import serie
 app.register_blueprint(serie)
+from my_app.proplayer.views import proplayer
+app.register_blueprint(proplayer)
 
 
 db.create_all()

@@ -51,6 +51,31 @@ class ConsoleAPI(Resource):
         }
         return json.dumps(res)
 
+    def delete(self,id):
+        con = Console.query.get(id)
+        db.session.delete(con)
+        db.session.commit()
+        res = {'id':id}
+        return json.dumps(res)
+
+    def put(self,id):
+        con = Console.query.get(id)
+        args = parser.parse_args()
+        name = args['name']
+        year = args['year']
+        price = args['price']
+        con.name = name
+        con.year = year
+        con.price = price
+        db.session.commit()
+        res = {}
+        res[con.id] = {
+            'name' : con.name,
+            'year' : con.year,
+            'price' : str(con.price)
+        }
+        return json.dumps(res)
+        
 api.add_resource(
     ConsoleAPI,
     '/api/console',
