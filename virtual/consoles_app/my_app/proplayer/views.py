@@ -1,5 +1,5 @@
 import json 
-from flask import Blueprint, abort
+from flask import Blueprint, abort, jsonify
 from flask_restful import Resource, reqparse
 from my_app.proplayer.models import Proplayer
 from my_app import api, db
@@ -26,25 +26,33 @@ class ProplayerAPI(Resource):
     def get(self,id=None,page=1):
         if not id:
             proplayers = Proplayer.query.paginate(page,10).items
+            res = []
+            for pro in proplayers:
+                res.append({
+                    'id': pro.id,
+                    'name': pro.name
+                })
+            return jsonify(res)
         else:
             proplayers = [Proplayer.query.get(id)]
+            res = {}
+            for pro in proplayers:
+                res = {
+                    'id': pro.id,
+                    'name' : pro.name,
+                    'name_team' : pro.name_team,
+                    'role' : pro.role,
+                    'kills' : pro.kills,
+                    'assists' : pro.assists,
+                    'deads' : pro.deads,
+                    'm_played' : pro.m_played,
+                    'm_win' : pro.m_win,
+                    'KDA' : (pro.kills+pro.assists) if (pro.deads == 0 ) else (pro.kills+pro.assists)/(pro.deads),
+                    '% Win' : (pro.m_win/pro.m_played)
+                }
+            return jsonify(res)
         if not proplayers:
             abort(404)
-        res = {}
-        for pro in proplayers:
-            res[pro.id] = {
-                'name' : pro.name,
-                'name_team' : pro.name_team,
-                'role' : pro.role,
-                'kills' : pro.kills,
-                'assists' : pro.assists,
-                'deads' : pro.deads,
-                'm_played' : pro.m_played,
-                'm_win' : pro.m_win,
-                'KDA' : (pro.kills+pro.assists) if (pro.deads == 0 ) else (pro.kills+pro.assists)/(pro.deads),
-                '% Win' : (pro.m_win/pro.m_played)
-            }
-        return json.dumps(res)
 
     def post(self):
         args = parser.parse_args()
@@ -60,25 +68,15 @@ class ProplayerAPI(Resource):
         pro = Proplayer(name,name_team,role,kills,assists,deads,m_played,m_win)
         db.session.add(pro)
         db.session.commit()
-        res = {}
-        res[pro.id] = {
-                'name' : pro.name,
-                'name_team' : pro.name_team,
-                'role' : pro.role,
-                'kills' : pro.kills,
-                'assists' : pro.assists,
-                'deads' : pro.deads,
-                'm_played' : pro.m_played,
-                'm_win' : pro.m_win
-        }
-        return json.dumps(res)
+        res = {'name' : pro.name}
+        return jsonify(res)
 
     def delete(self,id):
         pro = Proplayer.query.get(id)
         db.session.delete(pro)
         db.session.commit()
         res = {'id':id}
-        return json.dumps(res)
+        return jsonify(res)
 
     def put(self,id):
         pro = Proplayer.query.get(id)
@@ -100,18 +98,8 @@ class ProplayerAPI(Resource):
         pro.m_played = m_played
         pro.m_win = m_win
         db.session.commit()
-        res = {}
-        res[pro.id] = {
-            'name' : pro.name,
-            'name_team' : pro.name_team,
-            'role' : pro.role,
-            'kills' : pro.kills,
-            'assists' : pro.assists,
-            'deads' : pro.deads,
-            'm_played' : pro.m_played,
-            'm_win' : pro.m_win
-        }
-        return json.dumps(res)
+        res = {'id':pro.id}
+        return jsonify(res)
         
 api.add_resource(
     ProplayerAPI,
